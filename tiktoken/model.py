@@ -1,15 +1,13 @@
-from __future__ import annotations
-
 from .core import Encoding
 from .registry import get_encoding
 
 # TODO: these will likely be replaced by an API endpoint
-MODEL_PREFIX_TO_ENCODING: dict[str, str] = {
+MODEL_PREFIX_TO_ENCODING = {
     # chat
     "gpt-3.5-turbo-": "cl100k_base"  # e.g, gpt-3.5-turbo-0301, -0401, etc.
 }
 
-MODEL_TO_ENCODING: dict[str, str] = {
+MODEL_TO_ENCODING = {
     # chat
     "gpt-3.5-turbo": "cl100k_base",
     # text
@@ -51,7 +49,7 @@ MODEL_TO_ENCODING: dict[str, str] = {
 }
 
 
-def encoding_for_model(model_name: str) -> Encoding:
+def encoding_for_model(model_name):
     """Returns the encoding used by a model."""
     encoding_name = None
     if model_name in MODEL_TO_ENCODING:

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import base64
 import hashlib
 import json
@@ -10,7 +8,7 @@ import uuid
 import requests
 
 
-def read_file(blobpath: str) -> bytes:
+def read_file(blobpath):
     if not blobpath.startswith("http://") and not blobpath.startswith("https://"):
         try:
             import blobfile
@@ -24,7 +22,7 @@ def read_file(blobpath: str) -> bytes:
     return requests.get(blobpath).content
 
 
-def read_file_cached(blobpath: str) -> bytes:
+def read_file_cached(blobpath):
     if "TIKTOKEN_CACHE_DIR" in os.environ:
         cache_dir = os.environ["TIKTOKEN_CACHE_DIR"]
     elif "DATA_GYM_CACHE_DIR" in os.environ:
@@ -55,8 +53,8 @@ def read_file_cached(blobpath: str) -> bytes:
 
 
 def data_gym_to_mergeable_bpe_ranks(
-    vocab_bpe_file: str, encoder_json_file: str
-) -> dict[bytes, int]:
+    vocab_bpe_file, encoder_json_file
+):
     # NB: do not add caching to this function
     rank_to_intbyte = [b for b in range(2**8) if chr(b).isprintable() and chr(b) != " "]
 
@@ -73,7 +71,7 @@ def data_gym_to_mergeable_bpe_ranks(
     vocab_bpe_contents = read_file_cached(vocab_bpe_file).decode()
     bpe_merges = [tuple(merge_str.split()) for merge_str in vocab_bpe_contents.split("\n")[1:-1]]
 
-    def decode_data_gym(value: str) -> bytes:
+    def decode_data_gym(value):
         return bytes(data_gym_byte_to_byte[b] for b in value)
 
     # add the single byte tokens
@@ -97,7 +95,7 @@ def data_gym_to_mergeable_bpe_ranks(
     return bpe_ranks
 
 
-def dump_tiktoken_bpe(bpe_ranks: dict[bytes, int], tiktoken_bpe_file: str) -> None:
+def dump_tiktoken_bpe(bpe_ranks, tiktoken_bpe_file):
     try:
         import blobfile
     except ImportError:
@@ -109,7 +107,7 @@ def dump_tiktoken_bpe(bpe_ranks: dict[bytes, int], tiktoken_bpe_file: str) -> No
             f.write(base64.b64encode(token) + b" " + str(rank).encode() + b"\n")
 
 
-def load_tiktoken_bpe(tiktoken_bpe_file: str) -> dict[bytes, int]:
+def load_tiktoken_bpe(tiktoken_bpe_file):
     # NB: do not add caching to this function
     contents = read_file_cached(tiktoken_bpe_file)
     return {

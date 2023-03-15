@@ -5,9 +5,9 @@ description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{name = "Shantanu Jain"}, {email = "shantanu@openai.com"}]
-dependencies = ["regex>=2022.1.18", "requests>=2.26.0"]
+dependencies = ["regex", "requests", "cached-property"]
 optional-dependencies = {blobfile = ["blobfile>=2"]}
-requires-python = ">=3.8"
+requires-python = ">=3.6"
 
 [project.urls]
 homepage = "https://github.com/openai/tiktoken"
@@ -16,7 +16,7 @@ changelog = "https://github.com/openai/tiktoken/blob/main/CHANGELOG.md"
 
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=62.4", "wheel", "setuptools-rust>=1.5.2"]
+requires = ["setuptools", "wheel", "setuptools-rust"]
 
 [tool.cibuildwheel]
 build-frontend = "build"

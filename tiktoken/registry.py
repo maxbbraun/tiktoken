@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import importlib
 import pkgutil
 import threading
@@ -10,11 +8,11 @@ import tiktoken_ext
 from tiktoken.core import Encoding
 
 _lock = threading.RLock()
-ENCODINGS: dict[str, Encoding] = {}
-ENCODING_CONSTRUCTORS: Optional[dict[str, Callable[[], dict[str, Any]]]] = None
+ENCODINGS = {}
+ENCODING_CONSTRUCTORS = None
 
 
-def _find_constructors() -> None:
+def _find_constructors():
     global ENCODING_CONSTRUCTORS
     with _lock:
         if ENCODING_CONSTRUCTORS is not None:
@@ -44,7 +42,7 @@ def _find_constructors() -> None:
                 ENCODING_CONSTRUCTORS[enc_name] = constructor
 
 
-def get_encoding(encoding_name: str) -> Encoding:
+def get_encoding(encoding_name):
     if encoding_name in ENCODINGS:
         return ENCODINGS[encoding_name]
 
@@ -65,7 +63,7 @@ def get_encoding(encoding_name: str) -> Encoding:
         return enc
 
 
-def list_encoding_names() -> list[str]:
+def list_encoding_names():
     with _lock:
         if ENCODING_CONSTRUCTORS is None:
             _find_constructors()

@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import functools
+from cached_property import cached_property
 from concurrent.futures import ThreadPoolExecutor
-from typing import AbstractSet, Collection, Literal, NoReturn, Optional, Union
 
 import regex
 
@@ -12,12 +10,12 @@ from tiktoken import _tiktoken
 class Encoding:
     def __init__(
         self,
-        name: str,
+        name,
         *,
-        pat_str: str,
-        mergeable_ranks: dict[bytes, int],
-        special_tokens: dict[str, int],
-        explicit_n_vocab: Optional[int] = None,
+        pat_str,
+        mergeable_ranks,
+        special_tokens,
+        explicit_n_vocab=None,
     ):
         """Creates an Encoding object.
 
@@ -49,14 +47,14 @@ class Encoding:
 
         self._core_bpe = _tiktoken.CoreBPE(mergeable_ranks, special_tokens, pat_str)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return f"<Encoding {self.name!r}>"
 
     # ====================
     # Encoding
     # ====================
 
-    def encode_ordinary(self, text: str) -> list[int]:
+    def encode_ordinary(self, text):
         """Encodes a string into tokens, ignoring special tokens.
 
         This is equivalent to `encode(text, disallowed_special=())` (but slightly faster).
@@ -69,11 +67,11 @@ class Encoding:
 
     def encode(
         self,
-        text: str,
+        text,
         *,
-        allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),  # noqa: B006
-        disallowed_special: Union[Literal["all"], Collection[str]] = "all",
-    ) -> list[int]:
+        allowed_special=set(),  # noqa: B006
+        disallowed_special="all",
+    ):
         """Encodes a string into tokens.
 
         Special tokens are artificial tokens used to unlock capabilities from a model,
@@ -108,12 +106,13 @@ class Encoding:
         if disallowed_special:
             if not isinstance(disallowed_special, frozenset):
                 disallowed_special = frozenset(disallowed_special)
-            if match := _special_token_regex(disallowed_special).search(text):
+            match = _special_token_regex(disallowed_special).search(text)
+            if match:
                 raise_disallowed_special_token(match.group())
 
         return self._core_bpe.encode(text, allowed_special)
 
-    def encode_ordinary_batch(self, text: list[str], *, num_threads: int = 8) -> list[list[int]]:
+    def encode_ordinary_batch(self, text, *, num_threads=8):
         """Encodes a list of strings into tokens, in parallel, ignoring special tokens.
 
         This is equivalent to `encode_batch(text, disallowed_special=())` (but slightly faster).
@@ -129,12 +128,12 @@ class Encoding:
 
     def encode_batch(
         self,
-        text: list[str],
+        text,
         *,
-        num_threads: int = 8,
-        allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),  # noqa: B006
-        disallowed_special: Union[Literal["all"], Collection[str]] = "all",
-    ) -> list[list[int]]:
+        num_threads=8,
+        allowed_special=set(),  # noqa: B006
+        disallowed_special="all",
+    ):
         """Encodes a list of strings into tokens, in parallel.
 
         See `encode` for more details on `allowed_special` and `disallowed_special`.
@@ -159,11 +158,11 @@ class Encoding:
 
     def encode_with_unstable(
         self,
-        text: str,
+        text,
         *,
-        allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),  # noqa: B006
-        disallowed_special: Union[Literal["all"], Collection[str]] = "all",
-    ) -> tuple[list[int], list[list[int]]]:
+        allowed_special=set(),  # noqa: B006
+        disallowed_special="all",
+    ):
         """Encodes a string into stable tokens and possible completion sequences.
 
         Note that the stable tokens will only represent a substring of `text`.
@@ -189,12 +188,13 @@ class Encoding:
         if disallowed_special:
             if not isinstance(disallowed_special, frozenset):
                 disallowed_special = frozenset(disallowed_special)
-            if match := _special_token_regex(disallowed_special).search(text):
+            match = _special_token_regex(disallowed_special).search(text)
+            if match:
                 raise_disallowed_special_token(match.group())
 
         return self._core_bpe.encode_with_unstable(text, allowed_special)
 
-    def encode_single_token(self, text_or_bytes: Union[str, bytes]) -> int:
+    def encode_single_token(self, text_or_bytes):
         """Encodes text corresponding to a single token to its token value.
 
         NOTE: this will encode all special tokens.
@@ -214,7 +214,7 @@ class Encoding:
     # Decoding
     # ====================
 
-    def decode_bytes(self, tokens: list[int]) -> bytes:
+    def decode_bytes(self, tokens):
         """Decodes a list of tokens into bytes.
 
         ```
@@ -224,7 +224,7 @@ class Encoding:
         """
         return self._core_bpe.decode_bytes(tokens)
 
-    def decode(self, tokens: list[int], errors: str = "replace") -> str:
+    def decode(self, tokens, errors="replace"):
         """Decodes a list of tokens into a string.
 
         WARNING: the default behaviour of this function is lossy, since decoded bytes are not
@@ -238,7 +238,7 @@ class Encoding:
         """
         return self._core_bpe.decode_bytes(tokens).decode("utf-8", errors=errors)
 
-    def decode_single_token_bytes(self, token: int) -> bytes:
+    def decode_single_token_bytes(self, token):
         """Decodes a token into bytes.
 
         NOTE: this will decode all special tokens.
@@ -252,7 +252,7 @@ class Encoding:
         """
         return self._core_bpe.decode_single_token_bytes(token)
 
-    def decode_tokens_bytes(self, tokens: list[int]) -> list[bytes]:
+    def decode_tokens_bytes(self, tokens):
         """Decodes a list of tokens into a list of bytes.
 
         Useful for visualising tokenisation.
@@ -265,20 +265,20 @@ class Encoding:
     # Miscellaneous
     # ====================
 
-    def token_byte_values(self) -> list[bytes]:
+    def token_byte_values(self):
         """Returns the list of all token byte values."""
         return self._core_bpe.token_byte_values()
 
     @property
-    def eot_token(self) -> int:
+    def eot_token(self):
         return self._special_tokens["<|endoftext|>"]
 
-    @functools.cached_property
-    def special_tokens_set(self) -> set[str]:
+    @cached_property
+    def special_tokens_set(self):
         return set(self._special_tokens.keys())
 
     @property
-    def n_vocab(self) -> int:
+    def n_vocab(self):
         """For backwards compatibility. Prefer to use `enc.max_token_value + 1`."""
         return self.max_token_value + 1
 
@@ -286,7 +286,7 @@ class Encoding:
     # Private
     # ====================
 
-    def _encode_single_piece(self, text_or_bytes: Union[str, bytes]) -> list[int]:
+    def _encode_single_piece(self, text_or_bytes):
         """Encodes text corresponding to bytes without a regex split.
 
         NOTE: this will not encode any special tokens.
@@ -300,7 +300,7 @@ class Encoding:
             text_or_bytes = text_or_bytes.encode("utf-8")
         return self._core_bpe.encode_single_piece(text_or_bytes)
 
-    def _encode_only_native_bpe(self, text: str) -> list[int]:
+    def _encode_only_native_bpe(self, text):
         """Encodes a string into tokens, but do regex splitting in Python."""
         _unused_pat = regex.compile(self._pat_str)
         ret = []
@@ -308,17 +308,17 @@ class Encoding:
             ret.extend(self._core_bpe.encode_single_piece(piece))
         return ret
 
-    def _encode_bytes(self, text: bytes) -> list[int]:
+    def _encode_bytes(self, text):
         return self._core_bpe._encode_bytes(text)
 
 
 @functools.lru_cache(maxsize=128)
-def _special_token_regex(tokens: frozenset[str]) -> "regex.Pattern[str]":
+def _special_token_regex(tokens):
     inner = "|".join(regex.escape(token) for token in tokens)
     return regex.compile(f"({inner})")
 
 
-def raise_disallowed_special_token(token: str) -> NoReturn:
+def raise_disallowed_special_token(token):
     raise ValueError(
         f"Encountered text corresponding to disallowed special token {token!r}.\n"
         "If you want this text to be encoded as a special token, "
